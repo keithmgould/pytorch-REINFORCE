@@ -10,31 +10,11 @@ import torch.optim as optim
 import torch.nn.utils as utils
 import torchvision.transforms as T
 from torch.autograd import Variable
+from policy import Policy
 
 pi = Variable(torch.FloatTensor([math.pi]))
 
-class Policy(nn.Module):
-    def __init__(self, hidden_size, num_inputs, action_space):
-        super(Policy, self).__init__()
-        self.action_space = action_space
-        num_outputs = action_space.shape[0]
-
-        self.linear1 = nn.Linear(num_inputs, hidden_size)
-        self.linear2 = nn.Linear(hidden_size, num_outputs)
-        self.linear2_ = nn.Linear(hidden_size, num_outputs)
-
-    def forward(self, inputs):
-        x = inputs
-        x = self.linear1(x)
-        x = F.relu(x)
-        mu = self.linear2(x)
-        sigma_sq = self.linear2_(x)
-        sigma_sq = F.softplus(sigma_sq)
-
-        return mu, sigma_sq
-
-
-class REINFORCE:
+class Agent:
     def __init__(self, hidden_size, num_inputs, action_space):
         self.action_space = action_space
         self.model = Policy(hidden_size, num_inputs, action_space)
@@ -69,8 +49,6 @@ class REINFORCE:
 
         return action, log_prob
 
-    # interesting here that he calculates the loss this way.
-
     def update_parameters(self, rewards, log_probs, gamma):
         stepReturn = torch.zeros(1, 1)
         loss = 0
@@ -79,10 +57,8 @@ class REINFORCE:
             foo = log_probs[i]*Variable(stepReturn)
             loss = loss - foo[0]
         loss = loss / len(rewards)
-        pdb.set_trace()
 
-        # Silly pytorch stuff
         self.optimizer.zero_grad()
         loss.backward()
-        utils.clip_grad_norm(self.model.parameters(), 40)
+        # utils.clip_grad_norm(self.model.parameters(), 40)
         self.optimizer.step()

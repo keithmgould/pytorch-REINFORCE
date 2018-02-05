@@ -8,7 +8,7 @@ import torch
 from torch.autograd import Variable
 import torch.nn.utils as utils
 
-from normalized_actions import NormalizedActions
+from agent import Agent
 
 parser = argparse.ArgumentParser(description='PyTorch REINFORCE example')
 parser.add_argument('--env_name', type=str, default='RoboschoolInvertedPendulum-v2')
@@ -37,24 +37,12 @@ args = parser.parse_args()
 
 env_name = args.env_name
 env = gym.make(env_name)
-if type(env.action_space) != gym.spaces.discrete.Discrete:
-    from reinforce_continuous import REINFORCE
-    # env = NormalizedActions(gym.make(env_name))
-else:
-    from reinforce_discrete import REINFORCE
-
-# if args.display:
-#     env = wrappers.Monitor(env, '/tmp/{}-experiment'.format(env_name), force=True)
 
 env.seed(args.seed)
 torch.manual_seed(args.seed)
 np.random.seed(args.seed)
 
-agent = REINFORCE(args.hidden_size, env.observation_space.shape[0], env.action_space)
-
-# dir = 'ckpt_' + env_name
-# if not os.path.exists(dir):
-#     os.mkdir(dir)
+agent = Agent(args.hidden_size, env.observation_space.shape[0], env.action_space)
 
 for i_episode in range(args.num_episodes):
     state = torch.Tensor([env.reset()])
